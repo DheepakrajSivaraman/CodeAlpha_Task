@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stylized Image Gallery</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #111;
+      color: #eee;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+      font-size: 2.5rem;
+      color: #00e0ff;
+    }
+
+    .filter-buttons, .upload-section {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .filter-buttons button, .upload-section input[type="file"] {
+      margin: 8px;
+      padding: 10px 20px;
+      border: none;
+      background: #00e0ff;
+      color: #000;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .filter-buttons button:hover {
+      background: #00bcd4;
+    }
+
+    .upload-section input[type="file"] {
+      background: white;
+      color: #00bcd4;
+      border: 2px solid #00bcd4;
+    }
+
+    .gallery {
+      column-count: 3;
+      column-gap: 16px;
+      padding: 20px;
+    }
+
+    .image-card {
+      position: relative;
+      margin-bottom: 16px;
+      break-inside: avoid;
+      animation: fadeIn 0.8s ease-in;
+    }
+
+    .image-card img {
+      width: 100%;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 224, 255, 0.4);
+      transition: transform 0.3s ease;
+    }
+
+    .image-card img:hover {
+      transform: scale(1.02);
+    }
+
+    .category-label {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #00e0ff;
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .caption {
+      padding: 5px 0;
+      font-size: 14px;
+      text-align: center;
+      color: #aaa;
+    }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80%;
+      border-radius: 10px;
+    }
+
+    .lightbox button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      background: #00e0ff;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .lightbox button:hover {
+      background: #00bcd4;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media screen and (max-width: 768px) {
+      .gallery {
+        column-count: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>My Vivid Image Vault</h1>
+
+<div class="filter-buttons">
+  <button onclick="filterImages('all')">All</button>
+  <button onclick="filterImages('nature')">Nature</button>
+  <button onclick="filterImages('animals')">Animals</button>
+  <button onclick="filterImages('classic')">Classic</button>
+  <button onclick="filterImages('food')">Food</button>
+</div>
+
+<div class="upload-section">
+  <input type="file" id="imageUpload" accept="image/*">
+</div>
+
+<div class="gallery" id="gallery">
+  <!-- Image Cards -->
+  <div class="image-card nature">
+    <span class="category-label">Nature</span>
+    <img src="https://picsum.photos/id/1015/500/300" onclick="openLightbox(this)">
+    <div class="caption">Mountain Landscape</div>
+  </div>
+  <div class="image-card animals">
+    <span class="category-label">Animals</span>
+    <img src="https://picsum.photos/id/1025/500/300" onclick="openLightbox(this)">
+    <div class="caption">Cute Dog</div>
+  </div>
+  <div class="image-card classic">
+    <span class="category-label">Classic</span>
+    <img src="https://picsum.photos/id/1036/500/300" onclick="openLightbox(this)">
+    <div class="caption">Snowy Mountain</div>
+  </div>
+  <div class="image-card nature">
+    <span class="category-label">Nature</span>
+    <img src="https://picsum.photos/id/1042/500/300" onclick="openLightbox(this)">
+    <div class="caption">Wonderful Sky</div>
+  </div>
+  <div class="image-card animals">
+    <span class="category-label">Animals</span>
+    <img src="https://picsum.photos/id/237/500/300" onclick="openLightbox(this)">
+    <div class="caption">Beautiful Puppy</div>
+  </div>
+  <div class="image-card food">
+    <span class="category-label">Food</span>
+    <img src="https://picsum.photos/id/292/500/300" onclick="openLightbox(this)">
+    <div class="caption">Delicious Vegetables</div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <img id="lightbox-img" src="" alt="Expanded View">
+  <div>
+    <button onclick="prevImage()">❮ Prev</button>
+    <button onclick="closeLightbox()">✕ Close</button>
+    <button onclick="nextImage()">Next ❯</button>
+  </div>
+</div>
+
+<script>
+  const gallery = document.getElementById("gallery");
+  const lightbox = document.getElementById("lightbox");
+  const lightboxImg = document.getElementById("lightbox-img");
+  let galleryImages = document.querySelectorAll(".gallery img");
+  let imageList = Array.from(galleryImages);
+  let currentImageIndex = 0;
+
+  function openLightbox(img) {
+    currentImageIndex = imageList.indexOf(img);
+    lightboxImg.src = img.src;
+    lightbox.style.display = "flex";
+  }
+
+  function closeLightbox() {
+    lightbox.style.display = "none";
+  }
+
+  function prevImage() {
+    currentImageIndex = (currentImageIndex - 1 + imageList.length) % imageList.length;
+    lightboxImg.src = imageList[currentImageIndex].src;
+  }
+
+  function nextImage() {
+    currentImageIndex = (currentImageIndex + 1) % imageList.length;
+    lightboxImg.src = imageList[currentImageIndex].src;
+  }
+
+  function filterImages(category) {
+    document.querySelectorAll('.image-card').forEach(card => {
+      if (category === 'all' || card.classList.contains(category)) {
+        card.style.display = "block";
+      } else {
+        card.style.display = "none";
+      }
+    });
+  }
+
+  document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const newCard = document.createElement('div');
+        newCard.className = 'image-card user';
+        newCard.innerHTML = `
+          <span class="category-label">User</span>
+          <img src="${event.target.result}" onclick="openLightbox(this)">
+          <div class="caption">Uploaded Image</div>
+        `;
+        gallery.appendChild(newCard);
+        const newImg = newCard.querySelector('img');
+        imageList.push(newImg);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>
+
+</body>
+</html>
